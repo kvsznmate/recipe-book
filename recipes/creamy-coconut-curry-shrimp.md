@@ -1,4 +1,4 @@
-# 🍤 Creamy Coconut Curry Shrimp
+#  Creamy Coconut Curry Shrimp
 
 ### 🍤 Creamy Coconut Curry Shrimp — Step-by-Step Recipe
 
@@ -18,39 +18,35 @@ Servings
 
 Adjust to taste
 
-### Ingredients
+## Ingredients
 
-Ingredients checklist
+- 300 g shrimp, peeled and deveined
 
-0/14
+- 400 ml coconut milk
 
-300 g shrimp, peeled and deveined
+- 150 g rice (uncooked)
 
-400 ml coconut milk
+- 1 red bell pepper
 
-150 g rice (uncooked)
+- 1 small onion
 
-1 red bell pepper
+- 2–3 garlic cloves
 
-1 small onion
+- 1 tsp paprika
 
-2–3 garlic cloves
+- ½ tsp cumin
 
-1 tsp paprika
+- ½ tsp turmeric or curry powder
 
-½ tsp cumin
+- 1 tbsp soy sauce
 
-½ tsp turmeric or curry powder
+- 1 tbsp olive oil
 
-1 tbsp soy sauce
+- ½ lime or lemon
 
-1 tbsp olive oil
+- Chilli flakes (optional)
 
-½ lime or lemon
-
-Chilli flakes (optional)
-
-Salt and black pepper
+- Salt and black pepper
 
 ### Step-by-step instructions
 
