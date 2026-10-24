@@ -130,8 +130,6 @@
   }
   .badge[hidden] { display: none; }
   .shop-actions { margin-top: 0; }
-<<<<<<< Updated upstream
-=======
   .seg { display: inline-flex; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .seg button {
     min-height: 38px; padding: 0 14px; border: 0;
@@ -140,7 +138,6 @@
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
   .shop-items .for { display: block; font-size: 0.8rem; color: var(--muted); }
->>>>>>> Stashed changes
   .shop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .shop-title { min-width: 0; font-weight: 700; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
@@ -254,7 +251,8 @@ function titleOf(md, slug) {
 }
 
 function snippetOf(md) {
-  const line = md.split("\n").map((l) => l.trim())
+  const line = md.split("\n")
+    .map((l) => l.replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").trim())
     .find((l) => l && !l.startsWith("#") && !/^[-*_]{3,}$/.test(l));
   return line ? line.replace(/[*_`>[\]]/g, "").replace(/^([-+*]|\d+[.)])\s+/, "").slice(0, 140) : "";
 }
@@ -323,11 +321,12 @@ async function loadRecipes(force = false) {
 
 // ---- Shopping list (stored only in this browser) -------------------------
 const SHOP_KEY = "recipebook.shopping";
-const STOP_RE = /step|instruction|method|direction|preparation|how to|note|tip|nutrition|equipment/i;
+const STOP_RE = /\b(steps?|instructions?|method|directions?|preparation|how to|notes?|tips?|nutrition|equipment)\b/i;
+const LIST_RE = /^(?:[-*+•]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.+)/;
 
 // Pulls the ingredient list out of a recipe: the list items under the first
-// "Ingredients" heading (or "**Ingredients**" / "Ingredients:" line), up to the
-// next section. Sub-headings like "For the sauce" are kept as group labels.
+// "Ingredients" heading, up to the next section. Sub-headings like "For the
+// sauce" are kept as group labels.
 function ingredientsOf(md) {
   const plain = (s) => s.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "").trim();
   const labelOf = (line) => {
@@ -335,27 +334,38 @@ function ingredientsOf(md) {
     if (m) return { level: m[1].length, text: plain(m[2]) };
     m = line.match(/^(?:\*\*|__)(.+?)(?:\*\*|__):?$/);
     if (m) return { level: 7, text: plain(m[1]).replace(/:$/, "") };
-    m = line.match(/^([A-Za-z][^:]{0,40}):$/);
-    if (m) return { level: 7, text: plain(m[1]) };
+    // A short plain line like "🛒 Ingredients" or "For the sauce:" is what a heading
+    // turns into when a recipe is copied from the chat without its formatting.
+    if (line.length <= 50 && !LIST_RE.test(line) && !/^[\d¼½¾⅓⅔⅛]/.test(line) &&
+        !/[.!?]$/.test(line) && !line.startsWith("![") && /[a-z]/i.test(line))
+      return { level: 8, text: plain(line).replace(/:$/, "") };
     return null;
   };
 
-  const lines = md.split("\n").map((l) => l.trim());
-  const start = lines.findIndex((l) => /ingredient/i.test(labelOf(l)?.text || ""));
+  const lines = md.split("\n").map((l) => l.trim()).filter((l) => l && !/^[-*_\s]{3,}$/.test(l));
+  // Prefer a real heading over a bold line over a plain line, so a description
+  // like "Simple ingredients, big flavour" isn't mistaken for the section start.
+  let start = -1, level = 99;
+  lines.forEach((l, i) => {
+    const label = labelOf(l);
+    if (label && label.level < level && /ingredient/i.test(label.text)) { start = i; level = label.level; }
+  });
   if (start < 0) return [];
-  const level = labelOf(lines[start]).level;
 
-  const items = [];
+  const section = [];
   for (const line of lines.slice(start + 1)) {
     const label = labelOf(line);
-    if (label) {
-      if ((label.level <= 6 && label.level <= level) || STOP_RE.test(label.text)) break;
-      items.push({ group: true, text: label.text });
-      continue;
-    }
-    const m = line.match(/^(?:[-*+•]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.+)/);
-    if (m) items.push({ text: plain(m[1]), checked: false });
+    if (label && ((label.level <= 6 && label.level <= level) || STOP_RE.test(label.text))) break;
+    section.push({ line, label });
   }
+  // If the copy lost its bullet points, every plain line is an ingredient.
+  const hasBullets = section.some(({ line }) => LIST_RE.test(line));
+  const items = section.map(({ line, label }) => {
+    const m = line.match(LIST_RE);
+    if (m) return { text: plain(m[1]), checked: false };
+    if (label && (hasBullets || label.level <= 6)) return { group: true, text: label.text };
+    return hasBullets ? null : { text: plain(line), checked: false };
+  }).filter(Boolean);
   // Drop group labels that ended up with nothing under them.
   return items.filter((it, i) => !it.group || (items[i + 1] && !items[i + 1].group));
 }
@@ -601,10 +611,6 @@ function openOnGitHub(slug, body) {
   }
 }
 
-<<<<<<< Updated upstream
-// Plain-text version of the list, grouped by recipe, for pasting into notes or a chat.
-function shoppingText(list) {
-=======
 // ---- Combining the same ingredient across recipes ------------------------
 // Each ingredient line is read as amount + unit + name ("1½ tbsp olive oil"),
 // so "200 g spaghetti" and "300 g spaghetti" can become "500 g spaghetti".
@@ -770,18 +776,14 @@ function combineItems(list) {
 // Plain-text version of the list, for pasting into notes or a chat.
 function shoppingText(list, combined) {
   if (combined) return combineItems(list).map((it) => `- ${it.text}`).join("\n");
->>>>>>> Stashed changes
   return list.map((r) => {
     const lines = r.items.map((it) => (it.group ? `${it.text}:` : `- ${it.text}`));
     return [r.title, ...(lines.length ? lines : ["(no ingredients found)"])].join("\n");
   }).join("\n\n");
 }
 
-<<<<<<< Updated upstream
-=======
 const SHOP_VIEW_KEY = "recipebook.shoppingView";
 
->>>>>>> Stashed changes
 function viewShopping() {
   ++renderId;
   document.title = "Shopping list · Recipe Book";
@@ -822,33 +824,15 @@ function viewShopping() {
 
   app.innerHTML = `
     <h1>Shopping list</h1>
-<<<<<<< Updated upstream
-=======
     <div class="seg" role="group" aria-label="Shopping list view">
       <button data-view="recipe" aria-pressed="${!combined}">By recipe</button>
       <button data-view="combined" aria-pressed="${combined}">Combined</button>
     </div>
->>>>>>> Stashed changes
     <div class="actions shop-actions">
       <button id="copyList" class="btn primary">Copy list</button>
       <button id="clearList" class="btn">Clear list</button>
     </div>
     <p id="status" class="status" role="status"></p>
-<<<<<<< Updated upstream
-    <div id="shop">${list.map((r, ri) => `
-      <section class="shop-card">
-        <div class="shop-head">
-          <a href="#r/${encodeURIComponent(r.slug)}" class="shop-title">${esc(r.title)}</a>
-          <button class="btn small" data-remove="${ri}" aria-label="Remove ${esc(r.title)} from the list">Remove</button>
-        </div>
-        ${r.items.length ? `<ul class="shop-items">${r.items.map((it, ii) => it.group
-          ? `<li class="group">${esc(it.text)}</li>`
-          : `<li><label><input type="checkbox" data-r="${ri}" data-i="${ii}"${it.checked ? " checked" : ""}><span>${esc(it.text)}</span></label></li>`
-        ).join("")}</ul>`
-        : `<p class="muted small">No ingredient list found in this recipe. <a href="#r/${encodeURIComponent(r.slug)}">Open the recipe</a></p>`}
-      </section>`).join("")}
-    </div>`;
-=======
     <div id="shop">${combined ? combinedHtml() : byRecipeHtml()}</div>`;
 
   for (const btn of app.querySelectorAll("[data-view]")) {
@@ -857,7 +841,6 @@ function viewShopping() {
       viewShopping();
     });
   }
->>>>>>> Stashed changes
 
   const shop = $("#shop");
   shop.addEventListener("change", (e) => {
@@ -880,11 +863,7 @@ function viewShopping() {
     viewShopping();
   });
   $("#copyList").addEventListener("click", async () => {
-<<<<<<< Updated upstream
-    const text = shoppingText(loadShopping());
-=======
     const text = shoppingText(loadShopping(), combined);
->>>>>>> Stashed changes
     try {
       await navigator.clipboard.writeText(text);
       setStatus("Copied. Paste it into your notes or a chat.", "ok");
