@@ -130,6 +130,17 @@
   }
   .badge[hidden] { display: none; }
   .shop-actions { margin-top: 0; }
+<<<<<<< Updated upstream
+=======
+  .seg { display: inline-flex; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .seg button {
+    min-height: 38px; padding: 0 14px; border: 0;
+    background: var(--surface); color: var(--text); font: inherit; font-size: 0.9rem; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .shop-items .for { display: block; font-size: 0.8rem; color: var(--muted); }
+>>>>>>> Stashed changes
   .shop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .shop-title { min-width: 0; font-weight: 700; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
@@ -590,14 +601,187 @@ function openOnGitHub(slug, body) {
   }
 }
 
+<<<<<<< Updated upstream
 // Plain-text version of the list, grouped by recipe, for pasting into notes or a chat.
 function shoppingText(list) {
+=======
+// ---- Combining the same ingredient across recipes ------------------------
+// Each ingredient line is read as amount + unit + name ("1½ tbsp olive oil"),
+// so "200 g spaghetti" and "300 g spaghetti" can become "500 g spaghetti".
+const UNIT_DEFS = {
+  g:       { label: "g", aliases: "g gr gram grams gramme grammes" },
+  kg:      { label: "kg", aliases: "kg kgs kilo kilos kilogram kilograms", base: "g", factor: 1000 },
+  ml:      { label: "ml", aliases: "ml milliliter milliliters millilitre millilitres" },
+  l:       { label: "l", aliases: "l liter liters litre litres", base: "ml", factor: 1000 },
+  oz:      { label: "oz", aliases: "oz ounce ounces" },
+  lb:      { label: "lb", aliases: "lb lbs pound pounds", base: "oz", factor: 16 },
+  tsp:     { label: "tsp", aliases: "tsp tsps teaspoon teaspoons" },
+  tbsp:    { label: "tbsp", aliases: "tbsp tbsps tbs tbl tablespoon tablespoons" },
+  cup:     { label: "cup", plural: "cups", aliases: "cup cups" },
+  pinch:   { label: "pinch", plural: "pinches", aliases: "pinch pinches" },
+  dash:    { label: "dash", plural: "dashes", aliases: "dash dashes" },
+  handful: { label: "handful", plural: "handfuls", aliases: "handful handfuls" },
+  // "count" units can also come after the name: "3 garlic cloves" = "3 cloves garlic"
+  clove:   { label: "clove", plural: "cloves", aliases: "clove cloves", count: true },
+  // "canned" keeps "1 can tomatoes" apart from fresh "2 tomatoes"
+  can:     { label: "can", plural: "cans", aliases: "can cans tin tins", count: true, canned: true },
+  jar:     { label: "jar", plural: "jars", aliases: "jar jars", count: true, canned: true },
+  packet:  { label: "packet", plural: "packets", aliases: "packet packets pack packs", count: true },
+  bunch:   { label: "bunch", plural: "bunches", aliases: "bunch bunches", count: true },
+  sprig:   { label: "sprig", plural: "sprigs", aliases: "sprig sprigs", count: true },
+  stalk:   { label: "stalk", plural: "stalks", aliases: "stalk stalks", count: true },
+  stick:   { label: "stick", plural: "sticks", aliases: "stick sticks", count: true },
+  slice:   { label: "slice", plural: "slices", aliases: "slice slices", count: true },
+  head:    { label: "head", plural: "heads", aliases: "head heads", count: true },
+  piece:   { label: "piece", plural: "pieces", aliases: "piece pieces", count: true },
+};
+const UNITS = {}; // alias -> unit id
+for (const [id, def] of Object.entries(UNIT_DEFS)) for (const alias of def.aliases.split(" ")) UNITS[alias] = id;
+const BIGGER_UNIT = { g: ["kg", 1000], ml: ["l", 1000], oz: ["lb", 16] };
+
+const FRACS = { "¼": 1 / 4, "½": 1 / 2, "¾": 3 / 4, "⅓": 1 / 3, "⅔": 2 / 3, "⅛": 1 / 8, "⅜": 3 / 8, "⅝": 5 / 8, "⅞": 7 / 8 };
+const NUM = "(?:\\d+\\s+\\d+/\\d+|\\d+/\\d+|\\d+(?:\\.\\d+)?\\s*[¼½¾⅓⅔⅛⅜⅝⅞]?|[¼½¾⅓⅔⅛⅜⅝⅞])";
+const QTY_RE = new RegExp(`^(${NUM})(?:\\s*(?:-|–|—|to)\\s*(${NUM}))?`);
+
+// Words that don't change what you buy, so "2 large onions" matches "1 onion".
+const DESCRIPTORS = new Set(("large medium small big fresh freshly ripe finely roughly thinly coarsely " +
+  "chopped diced minced sliced grated crushed peeled extra virgin of canned tinned").split(" "));
+
+function parseNum(s) {
+  return s.replace(/([¼½¾⅓⅔⅛⅜⅝⅞])/g, " $1").trim().split(/\s+/).reduce((sum, part) => {
+    if (FRACS[part]) return sum + FRACS[part];
+    const [a, b] = part.split("/");
+    return sum + (b ? Number(a) / Number(b) : Number(a));
+  }, 0);
+}
+
+function singular(word) {
+  if (/ies$/.test(word)) return word.slice(0, -3) + "y";
+  if (/(o|ch|sh|x|ss)es$/.test(word)) return word.slice(0, -2);
+  if (/[^s]s$/.test(word)) return word.slice(0, -1);
+  return word;
+}
+
+function pluralize(name) {
+  return name.replace(/(\w+)$/, (w) => {
+    if (/s$/i.test(w)) return w;
+    if (/[^aeiou]y$/i.test(w)) return w.slice(0, -1) + "ies";
+    if (/(o|ch|sh|x)$/i.test(w)) return w + "es";
+    return w + "s";
+  });
+}
+
+const nameKey = (name) => name.toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/)
+  .filter((w) => w && !DESCRIPTORS.has(w)).map(singular).join(" ");
+
+function parseIngredient(text) {
+  // Notes like "(zest and juice)" or ", chopped" don't matter for shopping.
+  let s = text.replace(/\([^)]*\)/g, " ").split(",")[0].replace(/\s+/g, " ").trim();
+  let qty = null, unit = null;
+  const m = s.match(QTY_RE);
+  if (m) {
+    const lo = parseNum(m[1]);
+    qty = [lo, m[2] ? parseNum(m[2]) : lo];
+    s = s.slice(m[0].length).trim();
+  } else if (/^an?\s/i.test(s)) {
+    qty = [1, 1];
+    s = s.replace(/^an?\s+/i, "");
+  }
+  const u = s.match(/^([a-z]+)\.?(?=\s|$)/i);
+  if (qty && u && UNITS[u[1].toLowerCase()]) {
+    unit = UNITS[u[1].toLowerCase()];
+    s = s.slice(u[0].length).trim();
+  }
+  s = s.replace(/^of\s+/i, "");
+  if (qty && !unit) {
+    const words = s.split(" ");
+    const last = UNITS[words[words.length - 1].toLowerCase()];
+    if (words.length > 1 && last && UNIT_DEFS[last].count) {
+      unit = last;
+      s = words.slice(0, -1).join(" ");
+    }
+  }
+  const key = nameKey(s) || text.toLowerCase();
+  const canned = (unit && UNIT_DEFS[unit].canned) || /\b(canned|tinned)\b/i.test(s);
+  return { qty, unit, name: s || text, key: canned ? `canned ${key}` : key };
+}
+
+function fmtNum(n) {
+  n = Math.round(n * 1000) / 1000;
+  const whole = Math.floor(n), rest = n - whole;
+  if (rest < 0.01) return String(whole);
+  const frac = Object.entries(FRACS).find(([, v]) => Math.abs(v - rest) < 0.01);
+  if (frac) return whole ? `${whole}${frac[0]}` : frac[0];
+  return String(Math.round(n * 100) / 100);
+}
+
+function fmtAmount(unit, lo, hi) {
+  const bigger = BIGGER_UNIT[unit];
+  if (bigger && lo >= bigger[1]) { unit = bigger[0]; lo /= bigger[1]; hi /= bigger[1]; }
+  const n = lo === hi ? fmtNum(lo) : `${fmtNum(lo)}–${fmtNum(hi)}`;
+  if (!unit) return n;
+  const def = UNIT_DEFS[unit];
+  return `${n} ${hi > 1 && def.plural ? def.plural : def.label}`;
+}
+
+// Adds up the amounts of one ingredient. Amounts in units that can't be
+// converted into each other are listed side by side: "1 cup + 120 g flour".
+function mergedText(parts) {
+  const sums = new Map(); // unit -> [lo, hi]
+  for (const p of parts) {
+    if (!p.qty) continue;
+    const def = UNIT_DEFS[p.unit];
+    const unit = def?.base || p.unit || "";
+    const factor = def?.factor || 1;
+    const [lo, hi] = sums.get(unit) || [0, 0];
+    sums.set(unit, [lo + p.qty[0] * factor, hi + p.qty[1] * factor]);
+  }
+  let name = parts[0].name;
+  const counted = sums.get(""); // amounts without a unit, like "3 onions"
+  if (counted && counted[1] > 1) {
+    const plural = parts.find((p) => p.qty && !p.unit && p.qty[1] > 1);
+    name = plural ? plural.name : pluralize(name);
+  }
+  const amounts = [...sums].map(([unit, [lo, hi]]) => fmtAmount(unit, lo, hi));
+  return amounts.length ? `${amounts.join(" + ")} ${name}` : name;
+}
+
+// One entry per distinct ingredient. `refs` points back at the original items
+// so ticking a combined entry ticks it in every recipe.
+function combineItems(list) {
+  const entries = new Map();
+  list.forEach((r, ri) => r.items.forEach((it, ii) => {
+    if (it.group) return;
+    const p = parseIngredient(it.text);
+    if (!entries.has(p.key)) entries.set(p.key, { parts: [], refs: [], recipes: [] });
+    const e = entries.get(p.key);
+    e.parts.push({ ...p, text: it.text });
+    e.refs.push([ri, ii]);
+    if (!e.recipes.includes(r.title)) e.recipes.push(r.title);
+  }));
+  return [...entries.values()].map((e) => ({
+    text: e.parts.length === 1 ? e.parts[0].text : mergedText(e.parts),
+    recipes: e.recipes,
+    refs: e.refs,
+    checked: e.refs.every(([ri, ii]) => list[ri].items[ii].checked),
+  }));
+}
+
+// Plain-text version of the list, for pasting into notes or a chat.
+function shoppingText(list, combined) {
+  if (combined) return combineItems(list).map((it) => `- ${it.text}`).join("\n");
+>>>>>>> Stashed changes
   return list.map((r) => {
     const lines = r.items.map((it) => (it.group ? `${it.text}:` : `- ${it.text}`));
     return [r.title, ...(lines.length ? lines : ["(no ingredients found)"])].join("\n");
   }).join("\n\n");
 }
 
+<<<<<<< Updated upstream
+=======
+const SHOP_VIEW_KEY = "recipebook.shoppingView";
+
+>>>>>>> Stashed changes
 function viewShopping() {
   ++renderId;
   document.title = "Shopping list · Recipe Book";
@@ -612,13 +796,45 @@ function viewShopping() {
       </div>`;
     return;
   }
+  const combined = store.get(SHOP_VIEW_KEY) === "combined";
+  const merged = combined ? combineItems(list) : null;
+
+  const byRecipeHtml = () => list.map((r, ri) => `
+    <section class="shop-card">
+      <div class="shop-head">
+        <a href="#r/${encodeURIComponent(r.slug)}" class="shop-title">${esc(r.title)}</a>
+        <button class="btn small" data-remove="${ri}" aria-label="Remove ${esc(r.title)} from the list">Remove</button>
+      </div>
+      ${r.items.length ? `<ul class="shop-items">${r.items.map((it, ii) => it.group
+        ? `<li class="group">${esc(it.text)}</li>`
+        : `<li><label><input type="checkbox" data-r="${ri}" data-i="${ii}"${it.checked ? " checked" : ""}><span>${esc(it.text)}</span></label></li>`
+      ).join("")}</ul>`
+      : `<p class="muted small">No ingredient list found in this recipe. <a href="#r/${encodeURIComponent(r.slug)}">Open the recipe</a></p>`}
+    </section>`).join("");
+
+  const combinedHtml = () => merged.length ? `
+    <section class="shop-card">
+      <ul class="shop-items">${merged.map((it, ci) => `
+        <li><label><input type="checkbox" data-c="${ci}"${it.checked ? " checked" : ""}><span>${esc(it.text)}<small class="for">${esc(it.recipes.join(" · "))}</small></span></label></li>`).join("")}
+      </ul>
+    </section>`
+    : `<p class="muted">None of these recipes has an ingredient list.</p>`;
+
   app.innerHTML = `
     <h1>Shopping list</h1>
+<<<<<<< Updated upstream
+=======
+    <div class="seg" role="group" aria-label="Shopping list view">
+      <button data-view="recipe" aria-pressed="${!combined}">By recipe</button>
+      <button data-view="combined" aria-pressed="${combined}">Combined</button>
+    </div>
+>>>>>>> Stashed changes
     <div class="actions shop-actions">
       <button id="copyList" class="btn primary">Copy list</button>
       <button id="clearList" class="btn">Clear list</button>
     </div>
     <p id="status" class="status" role="status"></p>
+<<<<<<< Updated upstream
     <div id="shop">${list.map((r, ri) => `
       <section class="shop-card">
         <div class="shop-head">
@@ -632,14 +848,28 @@ function viewShopping() {
         : `<p class="muted small">No ingredient list found in this recipe. <a href="#r/${encodeURIComponent(r.slug)}">Open the recipe</a></p>`}
       </section>`).join("")}
     </div>`;
+=======
+    <div id="shop">${combined ? combinedHtml() : byRecipeHtml()}</div>`;
+
+  for (const btn of app.querySelectorAll("[data-view]")) {
+    btn.addEventListener("click", () => {
+      store.set(SHOP_VIEW_KEY, btn.dataset.view === "combined" ? "combined" : null);
+      viewShopping();
+    });
+  }
+>>>>>>> Stashed changes
 
   const shop = $("#shop");
   shop.addEventListener("change", (e) => {
     const box = e.target;
     if (!box.matches("input[type=checkbox]")) return;
     const list = loadShopping();
-    const item = list[box.dataset.r]?.items[box.dataset.i];
-    if (item) { item.checked = box.checked; saveShopping(list); }
+    const refs = box.dataset.c !== undefined ? merged[box.dataset.c].refs : [[box.dataset.r, box.dataset.i]];
+    for (const [ri, ii] of refs) {
+      const item = list[ri]?.items[ii];
+      if (item) item.checked = box.checked;
+    }
+    saveShopping(list);
   });
   shop.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-remove]");
@@ -650,7 +880,11 @@ function viewShopping() {
     viewShopping();
   });
   $("#copyList").addEventListener("click", async () => {
+<<<<<<< Updated upstream
     const text = shoppingText(loadShopping());
+=======
+    const text = shoppingText(loadShopping(), combined);
+>>>>>>> Stashed changes
     try {
       await navigator.clipboard.writeText(text);
       setStatus("Copied. Paste it into your notes or a chat.", "ok");
