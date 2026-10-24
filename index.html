@@ -148,6 +148,31 @@
   .shop-items input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
   .shop-items input:checked + span { text-decoration: line-through; color: var(--muted); }
 
+  /* Food emoji in the empty side margins on wide screens only */
+  .deco { display: none; }
+  @media (min-width: 1100px) {
+    .deco {
+      display: block; position: fixed; top: 0; bottom: 0; z-index: 0;
+      width: calc((100vw - 760px) / 2); pointer-events: none; user-select: none;
+    }
+    .deco-left { left: 0; }
+    .deco-right { right: 0; }
+    .deco span {
+      position: absolute; top: var(--y); left: var(--x);
+      font-size: var(--s, 2.5rem); line-height: 1;
+      transform: rotate(var(--r, 0deg));
+      animation: bob 7s ease-in-out infinite; animation-delay: var(--d, 0s);
+    }
+    main { position: relative; z-index: 1; }
+  }
+  @keyframes bob {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .deco span { animation: none; }
+  }
+
   @media (max-width: 400px) {
     nav { gap: 6px; }
     .btn { padding: 0 10px; }
@@ -165,6 +190,24 @@
     </nav>
   </div>
 </header>
+<div class="deco deco-left" aria-hidden="true">
+  <span style="--x:58%; --y:14%; --s:2.8rem; --r:-12deg">🍅</span>
+  <span style="--x:22%; --y:26%; --s:2.2rem; --r:10deg; --d:-2s">🥕</span>
+  <span style="--x:62%; --y:38%; --s:2.4rem; --r:-6deg; --d:-4s">🧄</span>
+  <span style="--x:26%; --y:50%; --s:3rem; --r:8deg; --d:-1s">🍝</span>
+  <span style="--x:60%; --y:62%; --s:2.2rem; --r:-14deg; --d:-5s">🌶️</span>
+  <span style="--x:24%; --y:74%; --s:2.6rem; --r:12deg; --d:-3s">🥑</span>
+  <span style="--x:56%; --y:86%; --s:2.3rem; --r:-8deg; --d:-6s">🍋</span>
+</div>
+<div class="deco deco-right" aria-hidden="true">
+  <span style="--x:24%; --y:16%; --s:2.4rem; --r:10deg; --d:-3s">🥦</span>
+  <span style="--x:60%; --y:28%; --s:2.8rem; --r:-10deg; --d:-1s">🍜</span>
+  <span style="--x:22%; --y:40%; --s:2.2rem; --r:14deg; --d:-5s">🧅</span>
+  <span style="--x:58%; --y:52%; --s:2.5rem; --r:-6deg; --d:-2s">🥐</span>
+  <span style="--x:26%; --y:64%; --s:3rem; --r:6deg; --d:-6s">🥘</span>
+  <span style="--x:62%; --y:76%; --s:2.2rem; --r:-12deg; --d:-4s">🍓</span>
+  <span style="--x:28%; --y:88%; --s:2.4rem; --r:8deg">🧀</span>
+</div>
 <main id="app"></main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
