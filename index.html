@@ -82,14 +82,15 @@
   .small { font-size: 0.875rem; }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 
-  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  /* minmax(0, 1fr) stops long one-line snippets from stretching the list wider than the screen */
+  .list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .list a {
     display: block; padding: 12px 14px;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     color: var(--text); text-decoration: none;
   }
   .list a:hover { border-color: var(--accent); }
-  .list .title { display: block; font-weight: 600; }
+  .list .title { display: block; font-weight: 600; overflow-wrap: anywhere; }
   .list .snippet { display: block; color: var(--muted); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .empty { text-align: center; padding: 40px 16px; border: 1px dashed var(--border); border-radius: var(--radius); }
@@ -128,11 +129,11 @@
     background: var(--accent); color: var(--accent-text); font-size: 0.75rem; font-weight: 700;
   }
   .badge[hidden] { display: none; }
-  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .page-head h1 { margin: 0; }
+  .shop-actions { margin-top: 0; }
   .shop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .shop-title { font-weight: 700; color: var(--text); text-decoration: none; }
+  .shop-title { min-width: 0; font-weight: 700; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+  .shop-items span { min-width: 0; overflow-wrap: anywhere; }
   .shop-items { list-style: none; margin: 8px 0 0; padding: 0; }
   .shop-items li.group { margin-top: 10px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
   .shop-items label { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 6px 0; font-weight: 400; cursor: pointer; }
@@ -589,6 +590,14 @@ function openOnGitHub(slug, body) {
   }
 }
 
+// Plain-text version of the list, grouped by recipe, for pasting into notes or a chat.
+function shoppingText(list) {
+  return list.map((r) => {
+    const lines = r.items.map((it) => (it.group ? `${it.text}:` : `- ${it.text}`));
+    return [r.title, ...(lines.length ? lines : ["(no ingredients found)"])].join("\n");
+  }).join("\n\n");
+}
+
 function viewShopping() {
   ++renderId;
   document.title = "Shopping list · Recipe Book";
@@ -604,10 +613,12 @@ function viewShopping() {
     return;
   }
   app.innerHTML = `
-    <div class="page-head">
-      <h1>Shopping list</h1>
+    <h1>Shopping list</h1>
+    <div class="actions shop-actions">
+      <button id="copyList" class="btn primary">Copy list</button>
       <button id="clearList" class="btn">Clear list</button>
     </div>
+    <p id="status" class="status" role="status"></p>
     <div id="shop">${list.map((r, ri) => `
       <section class="shop-card">
         <div class="shop-head">
@@ -637,6 +648,15 @@ function viewShopping() {
     list.splice(Number(btn.dataset.remove), 1);
     saveShopping(list);
     viewShopping();
+  });
+  $("#copyList").addEventListener("click", async () => {
+    const text = shoppingText(loadShopping());
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("Copied. Paste it into your notes or a chat.", "ok");
+    } catch {
+      setStatus("Couldn't copy in this browser.", "error");
+    }
   });
   $("#clearList").addEventListener("click", () => {
     if (!confirm("Remove everything from the shopping list?")) return;

@@ -44,8 +44,8 @@ your computer, or if you use a custom domain.
 - **Can't decide?** Tap **Random** to pick from the current list. Search first to narrow it down
   (for example, search `vegetarian`, then tap **Random**).
 - **Shopping list**: open a recipe and tap **Add to shopping list**. The **Shopping** page shows each
-  recipe's name with its ingredients. Tick items off as you shop, remove single recipes, or tap
-  **Clear list** to empty it. The list is saved only in the browser you use. It does not sync between
+  recipe's name with its ingredients. Tick items off as you shop, remove single recipes, tap
+  **Copy list** to copy everything as text (for your notes app or a chat), or tap **Clear list** to empty it. The list is saved only in the browser you use. It does not sync between
   your phone and laptop, so build it on the device you'll take shopping.
 - **Edit or delete**: open the recipe and tap **Edit or delete on GitHub**.
 - A recipe added or edited directly on GitHub can take a few minutes to show up. Tap **↻** to reload.
