@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipe Book</title>
+<style>
+  :root {
+    --bg: #fbf8f4;
+    --surface: #ffffff;
+    --text: #2a2420;
+    --muted: #7a6f66;
+    --border: #e7dfd6;
+    --accent: #c2492b;
+    --accent-text: #ffffff;
+    --accent-soft: #f6e3dc;
+    --error: #b42318;
+    --ok: #2f7d4a;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #181512;
+      --surface: #221e1a;
+      --text: #efe8e1;
+      --muted: #a69b91;
+      --border: #3a332d;
+      --accent: #e8714f;
+      --accent-text: #1a0f0a;
+      --accent-soft: #3a2620;
+      --error: #f97066;
+      --ok: #6cc58a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--accent); }
+  header {
+    position: sticky; top: 0; z-index: 1;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar, main { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; }
+  .brand { font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+  nav { display: flex; gap: 8px; }
+  main { padding-top: 20px; padding-bottom: 60px; }
+  h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 16px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font: inherit; font-size: 0.95rem; text-decoration: none; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .btn.small { min-height: 32px; padding: 0 10px; font-size: 0.85rem; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+
+  input[type=search], input[type=text], input[type=password], textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font: inherit;
+  }
+  input:focus, textarea:focus, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { font-family: ui-monospace, Consolas, monospace; font-size: 0.9rem; resize: vertical; }
+  label { display: block; font-weight: 600; margin: 16px 0 6px; }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .toolbar input { flex: 1; min-width: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.875rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .list a {
+    display: block; padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text); text-decoration: none;
+  }
+  .list a:hover { border-color: var(--accent); }
+  .list .title { display: block; font-weight: 600; }
+  .list .snippet { display: block; color: var(--muted); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .empty { text-align: center; padding: 40px 16px; border: 1px dashed var(--border); border-radius: var(--radius); }
+  .notice { padding: 14px 16px; border-radius: var(--radius); background: var(--accent-soft); }
+  .status { min-height: 1.6em; margin: 10px 0 0; }
+  .status.error { color: var(--error); }
+  .status.ok { color: var(--ok); }
+  .back { display: inline-block; margin-bottom: 12px; text-decoration: none; }
+
+  .prose { overflow-wrap: anywhere; }
+  .prose h1 { font-size: 1.8rem; }
+  .prose h2 { font-size: 1.25rem; margin: 28px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .prose h3 { font-size: 1.05rem; margin: 20px 0 6px; }
+  .prose ul, .prose ol { padding-left: 1.4em; }
+  .prose li { margin: 4px 0; }
+  .prose li::marker { color: var(--accent); }
+  .prose table { border-collapse: collapse; display: block; overflow-x: auto; }
+  .prose th, .prose td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  .prose code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+  .prose pre { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius); }
+  .prose pre code { background: none; padding: 0; }
+  .prose blockquote { margin: 12px 0; padding: 4px 14px; border-left: 3px solid var(--accent); color: var(--muted); }
+  .prose hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+  .prose img { max-width: 100%; }
+
+  .preview { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .preview:empty::before { content: "Paste a recipe above to see it here."; color: var(--muted); }
+  .preview-h { font-size: 1rem; margin: 28px 0 8px; color: var(--muted); }
+  details.tip { margin-top: 20px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+  details.tip summary { cursor: pointer; font-weight: 600; }
+  details.tip pre { white-space: pre-wrap; font-size: 0.875rem; background: var(--bg); padding: 10px; border-radius: 6px; }
+
+  .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px; border-radius: 10px;
+    background: var(--accent); color: var(--accent-text); font-size: 0.75rem; font-weight: 700;
+  }
+  .badge[hidden] { display: none; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .page-head h1 { margin: 0; }
+  .shop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+  .shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .shop-title { font-weight: 700; color: var(--text); text-decoration: none; }
+  .shop-items { list-style: none; margin: 8px 0 0; padding: 0; }
+  .shop-items li.group { margin-top: 10px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .shop-items label { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 6px 0; font-weight: 400; cursor: pointer; }
+  .shop-items input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
+  .shop-items input:checked + span { text-decoration: line-through; color: var(--muted); }
+
+  @media (max-width: 400px) {
+    nav { gap: 6px; }
+    .btn { padding: 0 10px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a href="#" class="brand">Recipe Book</a>
+    <nav>
+      <a href="#add" class="btn primary">+ Add</a>
+      <a href="#shopping" class="btn">Shopping<span id="shopCount" class="badge" hidden></span></a>
+      <a href="#settings" class="btn" title="Settings" aria-label="Settings">⚙</a>
+    </nav>
+  </div>
+</header>
+<main id="app"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script>
+// ---- Configuration -------------------------------------------------------
+// Replace the placeholders with your GitHub username and repository name.
+// When the site is hosted on GitHub Pages (username.github.io/repo) they are
+// detected automatically, so you only need to edit these for local testing.
+const CONFIG = {
+  owner: "YOUR-GITHUB-USERNAME",
+  repo: "YOUR-REPO-NAME",
+  branch: "main",
+  folder: "recipes",
+};
+
+const PROMPT =
+  "Please give me the full recipe in Markdown. Start with a single '# ' heading " +
+  "with the name of the dish, then a one-line description, servings and total time. " +
+  "Then a '## Ingredients' section as a bullet list and a '## Steps' section as a numbered list.";
+
+// ---- Setup ---------------------------------------------------------------
+if (CONFIG.owner.startsWith("YOUR-") && location.hostname.endsWith(".github.io")) {
+  CONFIG.owner = location.hostname.replace(/\.github\.io$/, "");
+  const first = location.pathname.split("/").filter(Boolean)[0];
+  CONFIG.repo = first && !first.includes(".") ? first : location.hostname;
+}
+const isConfigured = () => !CONFIG.owner.startsWith("YOUR-") && !CONFIG.repo.startsWith("YOUR-");
+const repoName = () => `${CONFIG.owner}/${CONFIG.repo}`;
+
+if (window.marked) marked.use({ gfm: true, breaks: true });
+
+const app = document.getElementById("app");
+const $ = (sel) => app.querySelector(sel);
+let recipes = null; // [{ slug, path, md, title, url }]
+let query = "";
+let renderId = 0;   // guards against a slow async view overwriting a newer one
+
+// localStorage can throw (private mode, blocked storage), so always go through this.
+const store = {
+  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key, value) {
+    try {
+      if (value) localStorage.setItem(key, value); else localStorage.removeItem(key);
+      return true;
+    } catch { return false; }
+  },
+};
+const token = () => store.get("recipebook.token") || "";
+
+// ---- Helpers -------------------------------------------------------------
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderMd(md) {
+  if (window.marked && window.DOMPurify) return DOMPurify.sanitize(marked.parse(md));
+  return `<pre>${esc(md)}</pre>`;
+}
+
+function slugify(s) {
+  return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "recipe";
+}
+
+function uniqueSlug(base) {
+  const taken = new Set((recipes || []).map((r) => r.slug));
+  let slug = base;
+  for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+  return slug;
+}
+
+const H1_RE = /^#[ \t]+(.+)$/m;
+function headingOf(md) {
+  const m = md.match(/^#{1,3}[ \t]+(.+)$/m);
+  return m ? m[1].replace(/[*_`]/g, "").trim() : "";
+}
+
+function titleOf(md, slug) {
+  const m = md.match(H1_RE);
+  if (m) return m[1].replace(/[*_`]/g, "").trim();
+  const name = slug.replace(/-/g, " ");
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function snippetOf(md) {
+  const line = md.split("\n").map((l) => l.trim())
+    .find((l) => l && !l.startsWith("#") && !/^[-*_]{3,}$/.test(l));
+  return line ? line.replace(/[*_`>[\]]/g, "").replace(/^([-+*]|\d+[.)])\s+/, "").slice(0, 140) : "";
+}
+
+function b64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+const encodePath = (p) => p.split("/").map(encodeURIComponent).join("/");
+
+function setStatus(msg, kind = "") {
+  const el = $("#status");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = "status " + kind;
+}
+
+// ---- GitHub API ----------------------------------------------------------
+function gh(path, opts = {}) {
+  const headers = { Accept: "application/vnd.github+json", ...(opts.headers || {}) };
+  if (token()) headers.Authorization = `Bearer ${token()}`;
+  const base = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}`;
+  return fetch(path ? `${base}/${path}` : base, { ...opts, headers });
+}
+
+async function errMsg(res) {
+  let msg = "";
+  try { msg = (await res.json()).message || ""; } catch {}
+  if (res.status === 401) return "GitHub rejected the token. Check it in Settings.";
+  if (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0")
+    return "GitHub rate limit reached. Add a token in Settings, or try again in an hour.";
+  if (res.status === 404) return `Couldn't find ${repoName()} on GitHub. Check the username and repo name.`;
+  if (res.status === 403) return `GitHub refused the request. Check that the token can write to ${repoName()}.`;
+  return `GitHub error ${res.status}${msg ? ": " + msg : ""}`;
+}
+
+function sortRecipes() {
+  recipes.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+async function loadRecipes(force = false) {
+  if (recipes && !force) return recipes;
+  const res = await gh(`contents/${encodePath(CONFIG.folder)}?ref=${encodeURIComponent(CONFIG.branch)}`);
+  if (res.status === 404) {
+    // The folder doesn't exist yet (no recipes) — unless the repo itself is missing.
+    const repo = await gh("");
+    if (!repo.ok) throw new Error(await errMsg(repo));
+    recipes = [];
+    return recipes;
+  }
+  if (!res.ok) throw new Error(await errMsg(res));
+  const files = (await res.json()).filter((f) => f.type === "file" && f.name.endsWith(".md"));
+  recipes = await Promise.all(files.map(async (f) => {
+    const r = await fetch(f.download_url);
+    if (!r.ok) throw new Error(`Couldn't load ${f.name} (${r.status})`);
+    const md = await r.text();
+    const slug = f.name.replace(/\.md$/, "");
+    return { slug, path: f.path, md, title: titleOf(md, slug), url: f.html_url };
+  }));
+  sortRecipes();
+  return recipes;
+}
+
+// ---- Shopping list (stored only in this browser) -------------------------
+const SHOP_KEY = "recipebook.shopping";
+const STOP_RE = /step|instruction|method|direction|preparation|how to|note|tip|nutrition|equipment/i;
+
+// Pulls the ingredient list out of a recipe: the list items under the first
+// "Ingredients" heading (or "**Ingredients**" / "Ingredients:" line), up to the
+// next section. Sub-headings like "For the sauce" are kept as group labels.
+function ingredientsOf(md) {
+  const plain = (s) => s.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/[*_`]/g, "").trim();
+  const labelOf = (line) => {
+    let m = line.match(/^(#{1,6})\s+(.+?)\s*#*$/);
+    if (m) return { level: m[1].length, text: plain(m[2]) };
+    m = line.match(/^(?:\*\*|__)(.+?)(?:\*\*|__):?$/);
+    if (m) return { level: 7, text: plain(m[1]).replace(/:$/, "") };
+    m = line.match(/^([A-Za-z][^:]{0,40}):$/);
+    if (m) return { level: 7, text: plain(m[1]) };
+    return null;
+  };
+
+  const lines = md.split("\n").map((l) => l.trim());
+  const start = lines.findIndex((l) => /ingredient/i.test(labelOf(l)?.text || ""));
+  if (start < 0) return [];
+  const level = labelOf(lines[start]).level;
+
+  const items = [];
+  for (const line of lines.slice(start + 1)) {
+    const label = labelOf(line);
+    if (label) {
+      if ((label.level <= 6 && label.level <= level) || STOP_RE.test(label.text)) break;
+      items.push({ group: true, text: label.text });
+      continue;
+    }
+    const m = line.match(/^(?:[-*+•]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.+)/);
+    if (m) items.push({ text: plain(m[1]), checked: false });
+  }
+  // Drop group labels that ended up with nothing under them.
+  return items.filter((it, i) => !it.group || (items[i + 1] && !items[i + 1].group));
+}
+
+function loadShopping() {
+  try {
+    const list = JSON.parse(store.get(SHOP_KEY) || "[]");
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
+function saveShopping(list) {
+  const ok = store.set(SHOP_KEY, list.length ? JSON.stringify(list) : null);
+  updateShopBadge();
+  return ok;
+}
+
+function updateShopBadge() {
+  const n = loadShopping().length;
+  const badge = document.getElementById("shopCount");
+  badge.textContent = n;
+  badge.hidden = !n;
+}
+
+// ---- Views ---------------------------------------------------------------
+function setupNotice() {
+  return `<div class="notice">
+    <strong>Almost there.</strong> Open <code>index.html</code> and replace
+    <code>YOUR-GITHUB-USERNAME</code> and <code>YOUR-REPO-NAME</code> in the CONFIG section,
+    or host the site on GitHub Pages, where they're detected automatically.
+  </div>`;
+}
+
+function filtered() {
+  if (!recipes) return [];
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return recipes.filter((r) => {
+    const hay = (r.title + "\n" + r.md).toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
+}
+
+function renderResults() {
+  const out = $("#results");
+  if (!out || !recipes) return;
+  const list = filtered();
+  if (!recipes.length) {
+    out.innerHTML = `<div class="empty">
+      <p>No recipes yet.</p>
+      <a href="#add" class="btn primary">Add your first recipe</a>
+    </div>`;
+  } else if (!list.length) {
+    out.innerHTML = `<p class="muted">No recipes match “${esc(query)}”.</p>`;
+  } else {
+    out.innerHTML = `
+      <p class="muted small">${list.length === recipes.length ? `${list.length} recipes` : `${list.length} of ${recipes.length} recipes`}</p>
+      <ul class="list">${list.map((r) => `
+        <li><a href="#r/${encodeURIComponent(r.slug)}">
+          <span class="title">${esc(r.title)}</span>
+          <span class="snippet">${esc(snippetOf(r.md))}</span>
+        </a></li>`).join("")}
+      </ul>`;
+  }
+}
+
+async function viewList() {
+  const id = ++renderId;
+  document.title = "Recipe Book";
+  if (!isConfigured()) { app.innerHTML = setupNotice(); return; }
+  app.innerHTML = `
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search recipes or ingredients…" autocomplete="off" value="${esc(query)}">
+      <button id="random" class="btn" title="Pick a random recipe from the current list">Random</button>
+      <button id="refresh" class="btn" title="Reload recipes from GitHub" aria-label="Refresh">↻</button>
+    </div>
+    <div id="results"><p class="muted">Loading recipes…</p></div>`;
+
+  const q = $("#q");
+  q.addEventListener("input", () => { query = q.value; renderResults(); });
+  $("#random").addEventListener("click", () => {
+    const list = filtered();
+    if (list.length) location.hash = "#r/" + encodeURIComponent(list[Math.floor(Math.random() * list.length)].slug);
+  });
+
+  const load = async (force) => {
+    try {
+      await loadRecipes(force);
+    } catch (e) {
+      if (id === renderId) $("#results").innerHTML = `<p class="status error">${esc(e.message)}</p>`;
+      return;
+    }
+    if (id === renderId) renderResults();
+  };
+  $("#refresh").addEventListener("click", () => {
+    $("#results").innerHTML = `<p class="muted">Loading recipes…</p>`;
+    load(true);
+  });
+  await load(false);
+}
+
+async function viewRecipe(slug) {
+  const id = ++renderId;
+  app.innerHTML = `<p class="muted">Loading…</p>`;
+  try {
+    await loadRecipes();
+  } catch (e) {
+    if (id === renderId) app.innerHTML = `<p class="status error">${esc(e.message)}</p>`;
+    return;
+  }
+  if (id !== renderId) return;
+
+  const r = recipes.find((x) => x.slug === slug);
+  if (!r) {
+    app.innerHTML = `<p>Recipe not found. <a href="#">Back to all recipes</a></p>`;
+    return;
+  }
+  document.title = `${r.title} · Recipe Book`;
+  app.innerHTML = `
+    <a href="#" class="back">← All recipes</a>
+    <article class="prose">${renderMd(r.md)}</article>
+    <div class="actions">
+      <button id="shopToggle" class="btn"></button>
+      <button id="copy" class="btn">Copy Markdown</button>
+      <a class="btn" href="${esc(r.url)}" target="_blank" rel="noopener">Edit or delete on GitHub</a>
+    </div>
+    <p id="status" class="status" role="status"></p>`;
+
+  const shopBtn = $("#shopToggle");
+  const refreshShopBtn = () => {
+    const inList = loadShopping().some((x) => x.slug === r.slug);
+    shopBtn.textContent = inList ? "Remove from shopping list" : "Add to shopping list";
+    shopBtn.classList.toggle("primary", !inList);
+  };
+  refreshShopBtn();
+  shopBtn.addEventListener("click", () => {
+    const list = loadShopping();
+    const i = list.findIndex((x) => x.slug === r.slug);
+    if (i >= 0) {
+      list.splice(i, 1);
+      saveShopping(list);
+      setStatus("Removed from your shopping list.", "ok");
+    } else {
+      const items = ingredientsOf(r.md);
+      list.push({ slug: r.slug, title: r.title, items });
+      if (!saveShopping(list)) return setStatus("This browser won't let the site save the shopping list (private mode?).", "error");
+      const n = items.filter((it) => !it.group).length;
+      if (n) setStatus(`Added ${n} ingredients to your shopping list.`, "ok");
+      else setStatus("Added, but no ingredient list was found in this recipe.", "error");
+    }
+    refreshShopBtn();
+  });
+
+  $("#copy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(r.md); setStatus("Copied.", "ok"); }
+    catch { setStatus("Couldn't copy in this browser.", "error"); }
+  });
+}
+
+function viewAdd() {
+  ++renderId;
+  document.title = "Add recipe · Recipe Book";
+  if (!isConfigured()) { app.innerHTML = setupNotice(); return; }
+  const hasToken = !!token();
+  app.innerHTML = `
+    <h1>Add a recipe</h1>
+    <label for="md">Paste the recipe</label>
+    <textarea id="md" rows="12" placeholder="# Creamy Tomato Pasta&#10;&#10;## Ingredients&#10;- 200 g pasta&#10;..."></textarea>
+    <label for="title">Title</label>
+    <input id="title" type="text" placeholder="Filled in from the recipe's heading">
+    <div class="actions">
+      <button id="save" class="btn primary">${hasToken ? "Save recipe" : "Save via GitHub"}</button>
+    </div>
+    <p id="status" class="status" role="status"></p>
+    ${hasToken ? "" : `<p class="muted small">No token is set, so saving opens GitHub with the recipe filled in. Click “Commit changes” there.
+      <a href="#settings">Add a token</a> to save in one click.</p>`}
+    <details class="tip">
+      <summary>Prompt for getting recipes in a consistent format</summary>
+      <p class="small">Add this to your message to ChatGPT or another LLM:</p>
+      <pre>${esc(PROMPT)}</pre>
+      <button id="copyPrompt" class="btn small">Copy prompt</button>
+    </details>
+    <h2 class="preview-h">Preview</h2>
+    <article id="preview" class="prose preview"></article>`;
+
+  const mdEl = $("#md"), titleEl = $("#title"), preview = $("#preview"), btn = $("#save");
+  let titleTouched = false;
+  titleEl.addEventListener("input", () => { titleTouched = titleEl.value.trim() !== ""; });
+  mdEl.addEventListener("input", () => {
+    const md = mdEl.value.trim();
+    if (!titleTouched) titleEl.value = headingOf(md);
+    preview.innerHTML = md ? renderMd(md) : "";
+  });
+  $("#copyPrompt").addEventListener("click", () => {
+    navigator.clipboard?.writeText(PROMPT).then(() => setStatus("Prompt copied.", "ok"), () => {});
+  });
+
+  btn.addEventListener("click", async () => {
+    const md = mdEl.value.trim();
+    const title = titleEl.value.trim();
+    if (!md) return setStatus("Paste a recipe first.", "error");
+    if (!title) return setStatus("Give the recipe a title.", "error");
+    // The title field wins: it replaces the recipe's first "# " heading, or is added on top.
+    const body = (H1_RE.test(md) ? md.replace(H1_RE, `# ${title}`) : `# ${title}\n\n${md}`) + "\n";
+    const slug = uniqueSlug(slugify(title));
+
+    // No token: hand off to GitHub's own "new file" page. Must stay synchronous so the popup isn't blocked.
+    if (!token()) return openOnGitHub(slug, body);
+
+    btn.disabled = true;
+    setStatus("Saving…");
+    try {
+      await loadRecipes();
+      const finalSlug = uniqueSlug(slugify(title));
+      const path = `${CONFIG.folder}/${finalSlug}.md`;
+      const res = await gh(`contents/${encodePath(path)}`, {
+        method: "PUT",
+        body: JSON.stringify({ message: `Add recipe: ${title}`, content: b64(body), branch: CONFIG.branch }),
+      });
+      if (!res.ok) throw new Error(await errMsg(res));
+      const data = await res.json();
+      recipes.push({ slug: finalSlug, path, md: body, title: titleOf(body, finalSlug), url: data.content.html_url });
+      sortRecipes();
+      location.hash = "#r/" + encodeURIComponent(finalSlug);
+    } catch (e) {
+      setStatus(e.message, "error");
+      btn.disabled = false;
+    }
+  });
+}
+
+function openOnGitHub(slug, body) {
+  const base = `https://github.com/${CONFIG.owner}/${CONFIG.repo}/new/${encodeURIComponent(CONFIG.branch)}/${encodePath(CONFIG.folder)}` +
+    `?filename=${encodeURIComponent(slug + ".md")}`;
+  const full = `${base}&value=${encodeURIComponent(body)}`;
+  navigator.clipboard?.writeText(body).catch(() => {});
+  if (full.length <= 8000) {
+    window.open(full, "_blank", "noopener");
+    setStatus("Opened GitHub. Click “Commit changes” there, then refresh the recipe list here in about a minute.", "ok");
+  } else {
+    // Very long recipes don't fit in a URL, so the user pastes them in.
+    window.open(base, "_blank", "noopener");
+    setStatus("This recipe is too long to pre-fill, so it was copied to your clipboard (or copy it from the box above). Paste it into the GitHub editor and click “Commit changes”.", "ok");
+  }
+}
+
+function viewShopping() {
+  ++renderId;
+  document.title = "Shopping list · Recipe Book";
+  const list = loadShopping();
+  if (!list.length) {
+    app.innerHTML = `
+      <h1>Shopping list</h1>
+      <div class="empty">
+        <p>Your shopping list is empty.</p>
+        <p class="muted small">Open a recipe and tap “Add to shopping list”.</p>
+        <a href="#" class="btn">Browse recipes</a>
+      </div>`;
+    return;
+  }
+  app.innerHTML = `
+    <div class="page-head">
+      <h1>Shopping list</h1>
+      <button id="clearList" class="btn">Clear list</button>
+    </div>
+    <div id="shop">${list.map((r, ri) => `
+      <section class="shop-card">
+        <div class="shop-head">
+          <a href="#r/${encodeURIComponent(r.slug)}" class="shop-title">${esc(r.title)}</a>
+          <button class="btn small" data-remove="${ri}" aria-label="Remove ${esc(r.title)} from the list">Remove</button>
+        </div>
+        ${r.items.length ? `<ul class="shop-items">${r.items.map((it, ii) => it.group
+          ? `<li class="group">${esc(it.text)}</li>`
+          : `<li><label><input type="checkbox" data-r="${ri}" data-i="${ii}"${it.checked ? " checked" : ""}><span>${esc(it.text)}</span></label></li>`
+        ).join("")}</ul>`
+        : `<p class="muted small">No ingredient list found in this recipe. <a href="#r/${encodeURIComponent(r.slug)}">Open the recipe</a></p>`}
+      </section>`).join("")}
+    </div>`;
+
+  const shop = $("#shop");
+  shop.addEventListener("change", (e) => {
+    const box = e.target;
+    if (!box.matches("input[type=checkbox]")) return;
+    const list = loadShopping();
+    const item = list[box.dataset.r]?.items[box.dataset.i];
+    if (item) { item.checked = box.checked; saveShopping(list); }
+  });
+  shop.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-remove]");
+    if (!btn) return;
+    const list = loadShopping();
+    list.splice(Number(btn.dataset.remove), 1);
+    saveShopping(list);
+    viewShopping();
+  });
+  $("#clearList").addEventListener("click", () => {
+    if (!confirm("Remove everything from the shopping list?")) return;
+    saveShopping([]);
+    viewShopping();
+  });
+}
+
+function viewSettings() {
+  ++renderId;
+  document.title = "Settings · Recipe Book";
+  app.innerHTML = `
+    <h1>Settings</h1>
+    ${isConfigured()
+      ? `<p class="muted">Recipes are stored in <a href="https://github.com/${esc(repoName())}" target="_blank" rel="noopener">${esc(repoName())}</a>, in the <code>${esc(CONFIG.folder)}/</code> folder.</p>`
+      : setupNotice()}
+    <label for="token">GitHub token (optional)</label>
+    <input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(token())}">
+    <p class="muted small">
+      With a token you can save recipes in one click. It is stored only in this browser, so enter it once on each device.
+      Create one at <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>:
+      under <b>Repository access</b> choose <b>Only select repositories</b> and pick this repo, then under
+      <b>Permissions → Repository permissions</b> set <b>Contents</b> to <b>Read and write</b>.
+    </p>
+    <div class="actions">
+      <button id="saveToken" class="btn primary">Save and test</button>
+      <button id="clearToken" class="btn">Remove token</button>
+    </div>
+    <p id="status" class="status" role="status"></p>`;
+
+  $("#saveToken").addEventListener("click", async () => {
+    const value = $("#token").value.trim();
+    if (!value) return setStatus("Paste a token first.", "error");
+    if (!store.set("recipebook.token", value)) return setStatus("This browser won't let the site store the token (private mode?).", "error");
+    if (!isConfigured()) return setStatus("Token saved. Set your username and repo to test it.", "ok");
+    setStatus("Testing…");
+    try {
+      const res = await gh("");
+      if (!res.ok) throw new Error(await errMsg(res));
+      const repo = await res.json();
+      if (repo.permissions && repo.permissions.push) setStatus("Token works. You can save recipes in one click.", "ok");
+      else setStatus(`Token saved, but it can't write to ${repoName()}. Give it Contents: Read and write.`, "error");
+    } catch (e) {
+      setStatus(e.message, "error");
+    }
+  });
+  $("#clearToken").addEventListener("click", () => {
+    store.set("recipebook.token", null);
+    $("#token").value = "";
+    setStatus("Token removed from this browser.", "ok");
+  });
+}
+
+// ---- Router --------------------------------------------------------------
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h === "add") viewAdd();
+  else if (h === "shopping") viewShopping();
+  else if (h === "settings") viewSettings();
+  else if (h.startsWith("r/")) viewRecipe(h.slice(2));
+  else viewList();
+  window.scrollTo(0, 0);
+}
+addEventListener("hashchange", route);
+updateShopBadge();
+route();
+</script>
+</body>
+</html>

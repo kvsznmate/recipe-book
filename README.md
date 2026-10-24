@@ -1,0 +1,59 @@
+# Recipe Book
+
+A personal recipe book that runs entirely on GitHub Pages. Each recipe is a Markdown file in `recipes/`.
+The website lists them, searches them, picks a random one, and lets you paste in new ones (for example,
+recipes you worked out with ChatGPT).
+
+## Files
+
+| File | What it is |
+|---|---|
+| `index.html` | The whole website |
+| `recipes/*.md` | Your recipes, one file each (`lemon-garlic-pasta.md` is an example you can delete later) |
+| `.nojekyll` | Tells GitHub Pages to serve the files as they are, without processing them |
+
+## Setup (about 10 minutes, once)
+
+1. **Create a repository** on GitHub, for example `recipe-book`. It must be **public**, because free
+   GitHub Pages only works with public repos.
+2. **Upload these files** to the repo: on the repo page, click **Add file → Upload files** and drag in
+   `index.html`, `.nojekyll` and the `recipes` folder, then click **Commit changes**.
+3. **Turn on Pages**: go to **Settings → Pages**, set *Source* to **Deploy from a branch**, choose
+   **main** and **/ (root)**, then click **Save**. After a minute your site is at
+   `https://<your-username>.github.io/recipe-book/`.
+4. **Optional, for one-click saving: create a token.**
+   - Go to <https://github.com/settings/personal-access-tokens/new>.
+   - Give it a name and an expiration. You'll need a new one when it expires.
+   - Under **Repository access**, choose **Only select repositories** and pick your recipe repo.
+   - Under **Permissions → Repository permissions**, set **Contents** to **Read and write**.
+   - Click **Generate token**, copy it, and paste it into the site's **Settings** page. Do this once on each
+     device you use (phone, laptop).
+
+   The token stays in your browser. It is never put in the code, so nobody else can add recipes.
+
+The username and repo name are detected from the address when the site runs on GitHub Pages. You only need
+to replace `YOUR-GITHUB-USERNAME` and `YOUR-REPO-NAME` in `index.html` if you open the file directly on
+your computer, or if you use a custom domain.
+
+## Using it
+
+- **Add a recipe**: copy the recipe from the LLM, tap **+ Add**, paste it, check the title and tap **Save**.
+  - With a token, it's saved right away.
+  - Without a token, GitHub opens with the recipe filled in. Click **Commit changes** there.
+- **Find a recipe**: search by name or ingredient (for example `chicken rice`).
+- **Can't decide?** Tap **Random** to pick from the current list. Search first to narrow it down
+  (for example, search `vegetarian`, then tap **Random**).
+- **Shopping list**: open a recipe and tap **Add to shopping list**. The **Shopping** page shows each
+  recipe's name with its ingredients. Tick items off as you shop, remove single recipes, or tap
+  **Clear list** to empty it. The list is saved only in the browser you use. It does not sync between
+  your phone and laptop, so build it on the device you'll take shopping.
+- **Edit or delete**: open the recipe and tap **Edit or delete on GitHub**.
+- A recipe added or edited directly on GitHub can take a few minutes to show up. Tap **↻** to reload.
+
+## Tip: getting a consistent format from the LLM
+
+Add this to your message to the LLM (the Add page has a copy button for it):
+
+> Please give me the full recipe in Markdown. Start with a single '# ' heading with the name of the dish,
+> then a one-line description, servings and total time. Then a '## Ingredients' section as a bullet list
+> and a '## Steps' section as a numbered list.
