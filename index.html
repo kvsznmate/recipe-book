@@ -130,8 +130,6 @@
   }
   .badge[hidden] { display: none; }
   .shop-actions { margin-top: 0; }
-<<<<<<< Updated upstream
-=======
   .seg { display: inline-flex; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
   .seg button {
     min-height: 38px; padding: 0 14px; border: 0;
@@ -140,7 +138,6 @@
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
   .shop-items .for { display: block; font-size: 0.8rem; color: var(--muted); }
->>>>>>> Stashed changes
   .shop-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .shop-title { min-width: 0; font-weight: 700; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
@@ -601,10 +598,6 @@ function openOnGitHub(slug, body) {
   }
 }
 
-<<<<<<< Updated upstream
-// Plain-text version of the list, grouped by recipe, for pasting into notes or a chat.
-function shoppingText(list) {
-=======
 // ---- Combining the same ingredient across recipes ------------------------
 // Each ingredient line is read as amount + unit + name ("1½ tbsp olive oil"),
 // so "200 g spaghetti" and "300 g spaghetti" can become "500 g spaghetti".
@@ -770,18 +763,14 @@ function combineItems(list) {
 // Plain-text version of the list, for pasting into notes or a chat.
 function shoppingText(list, combined) {
   if (combined) return combineItems(list).map((it) => `- ${it.text}`).join("\n");
->>>>>>> Stashed changes
   return list.map((r) => {
     const lines = r.items.map((it) => (it.group ? `${it.text}:` : `- ${it.text}`));
     return [r.title, ...(lines.length ? lines : ["(no ingredients found)"])].join("\n");
   }).join("\n\n");
 }
 
-<<<<<<< Updated upstream
-=======
 const SHOP_VIEW_KEY = "recipebook.shoppingView";
 
->>>>>>> Stashed changes
 function viewShopping() {
   ++renderId;
   document.title = "Shopping list · Recipe Book";
@@ -822,33 +811,15 @@ function viewShopping() {
 
   app.innerHTML = `
     <h1>Shopping list</h1>
-<<<<<<< Updated upstream
-=======
     <div class="seg" role="group" aria-label="Shopping list view">
       <button data-view="recipe" aria-pressed="${!combined}">By recipe</button>
       <button data-view="combined" aria-pressed="${combined}">Combined</button>
     </div>
->>>>>>> Stashed changes
     <div class="actions shop-actions">
       <button id="copyList" class="btn primary">Copy list</button>
       <button id="clearList" class="btn">Clear list</button>
     </div>
     <p id="status" class="status" role="status"></p>
-<<<<<<< Updated upstream
-    <div id="shop">${list.map((r, ri) => `
-      <section class="shop-card">
-        <div class="shop-head">
-          <a href="#r/${encodeURIComponent(r.slug)}" class="shop-title">${esc(r.title)}</a>
-          <button class="btn small" data-remove="${ri}" aria-label="Remove ${esc(r.title)} from the list">Remove</button>
-        </div>
-        ${r.items.length ? `<ul class="shop-items">${r.items.map((it, ii) => it.group
-          ? `<li class="group">${esc(it.text)}</li>`
-          : `<li><label><input type="checkbox" data-r="${ri}" data-i="${ii}"${it.checked ? " checked" : ""}><span>${esc(it.text)}</span></label></li>`
-        ).join("")}</ul>`
-        : `<p class="muted small">No ingredient list found in this recipe. <a href="#r/${encodeURIComponent(r.slug)}">Open the recipe</a></p>`}
-      </section>`).join("")}
-    </div>`;
-=======
     <div id="shop">${combined ? combinedHtml() : byRecipeHtml()}</div>`;
 
   for (const btn of app.querySelectorAll("[data-view]")) {
@@ -857,7 +828,6 @@ function viewShopping() {
       viewShopping();
     });
   }
->>>>>>> Stashed changes
 
   const shop = $("#shop");
   shop.addEventListener("change", (e) => {
@@ -880,11 +850,7 @@ function viewShopping() {
     viewShopping();
   });
   $("#copyList").addEventListener("click", async () => {
-<<<<<<< Updated upstream
-    const text = shoppingText(loadShopping());
-=======
     const text = shoppingText(loadShopping(), combined);
->>>>>>> Stashed changes
     try {
       await navigator.clipboard.writeText(text);
       setStatus("Copied. Paste it into your notes or a chat.", "ok");
