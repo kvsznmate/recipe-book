@@ -45,7 +45,13 @@ your computer, or if you use a custom domain.
   (for example, search `vegetarian`, then tap **Random**).
 - **Shopping list**: open a recipe and tap **Add to shopping list**. The **Shopping** page shows each
   recipe's name with its ingredients. Tick items off as you shop, remove single recipes, tap
+<<<<<<< Updated upstream
   **Copy list** to copy everything as text (for your notes app or a chat), or tap **Clear list** to empty it. The list is saved only in the browser you use. It does not sync between
+=======
+  **Copy list** to copy everything as text (for your notes app or a chat), or tap **Clear list** to empty it.
+  Switch to **Combined** to see one list where the same ingredient from different recipes is added up
+  (for example, 200 g + 300 g spaghetti becomes 500 g spaghetti). Below each item it shows which recipes need it. The list is saved only in the browser you use. It does not sync between
+>>>>>>> Stashed changes
   your phone and laptop, so build it on the device you'll take shopping.
 - **Edit or delete**: open the recipe and tap **Edit or delete on GitHub**.
 - A recipe added or edited directly on GitHub can take a few minutes to show up. Tap **↻** to reload.
