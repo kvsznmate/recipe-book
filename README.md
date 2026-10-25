@@ -1,8 +1,21 @@
 # Recipe Book
 
-A personal recipe book that runs entirely on GitHub Pages. Each recipe is a Markdown file in `recipes/`.
-The website lists them, searches them, picks a random one, and lets you paste in new ones (for example,
-recipes you worked out with ChatGPT).
+## Why I Built This Project
+
+I built this project to solve a small but recurring problem in my everyday life: figuring out what to cook using the ingredients I already have at home.
+
+I often use Large Language Models (ChatGPT or Claude) to generate recipe ideas based on the ingredients available in my kitchen. One of the things I enjoy most about these tools is their ability to suggest creative ingredient combinations, interesting spice pairings, and simple techniques that can improve the flavor of a dish. They often come up with recipes that are easy to prepare, surprisingly delicious, and worth making again.
+
+However, once I find a recipe I like, I need a convenient way to save it for future use instead of searching through old conversations to find it again. This inspired me to build a simple, personal recipe book where I can collect and organize recipes in one place.
+
+This self hostable website allows users to copy and paste recipe suggestions directly from tools such as ChatGPT or Claude and save them as recipes. This makes it easy to build a personal cookbook filled with recipes tailored to individual tastes, available ingredients, and cooking preferences.
+
+Another important feature is the shopping list function. Users can select recipes they plan to cook and collect their ingredients into a shopping list. They can then copy the list and use it when shopping for groceries, making meal planning more convenient and reducing the effort required to prepare for multiple meals.
+
+I intentionally kept the project simple by building it with HTML, CSS, and Markdown. The idea was to create a lightweight, accessible, and easy-to-use website without unnecessary complexity. 
+
+
+![Desktop screensht](desktopscr.png)
 
 ## Files
 
@@ -14,13 +27,13 @@ recipes you worked out with ChatGPT).
 
 ## Setup (about 10 minutes, once)
 
-1. **Create a repository** on GitHub, for example `recipe-book`. It must be **public**, because free
+1. **Create a repository** on GitHub, for example `My-recipe-book`. It must be **public**, because free
    GitHub Pages only works with public repos.
 2. **Upload these files** to the repo: on the repo page, click **Add file → Upload files** and drag in
    `index.html`, `.nojekyll` and the `recipes` folder, then click **Commit changes**.
 3. **Turn on Pages**: go to **Settings → Pages**, set *Source* to **Deploy from a branch**, choose
    **main** and **/ (root)**, then click **Save**. After a minute your site is at
-   `https://<your-username>.github.io/recipe-book/`.
+   `https://<your-username>.github.io/My-recipe-book/`.
 4. **Optional, for one-click saving: create a token.**
    - Go to <https://github.com/settings/personal-access-tokens/new>.
    - Give it a name and an expiration. You'll need a new one when it expires.
